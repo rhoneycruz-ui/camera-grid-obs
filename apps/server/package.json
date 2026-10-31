@@ -1,0 +1,23 @@
+{
+  "name": "@camera-grid/server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "pretest": "npm run build --workspace @camera-grid/domain && npm run build --workspace @camera-grid/protocol",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@camera-grid/domain": "0.0.0",
+    "@camera-grid/protocol": "0.0.0",
+    "@fastify/websocket": "^11.2.0",
+    "fastify": "^5.6.1",
+    "ws": "^8.18.3",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.18.1"
+  }
+}

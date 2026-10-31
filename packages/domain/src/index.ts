@@ -20,6 +20,7 @@ export {
 export {
   ParticipantSchema,
   PublicationStatusSchema,
+  SessionStateSchema,
   createSession,
   restoreSession,
   type CreateSessionInput,

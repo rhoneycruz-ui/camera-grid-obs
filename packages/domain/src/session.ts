@@ -25,16 +25,20 @@ export const ParticipantSchema = z
 
 export type Participant = z.infer<typeof ParticipantSchema>;
 
-export interface SessionState {
-  sessionId: string;
-  revision: number;
-  status: "ACTIVE" | "ENDED";
-  directorOnline: boolean;
-  outputAccess: "ACTIVE" | "REVOKED";
-  invites: Record<string, Invite>;
-  participants: Record<string, Participant>;
-  layout: CameraLayout;
-}
+export const SessionStateSchema = z
+  .object({
+    sessionId: z.string().min(1).max(64),
+    revision: z.number().int().nonnegative(),
+    status: z.enum(["ACTIVE", "ENDED"]),
+    directorOnline: z.boolean(),
+    outputAccess: z.enum(["ACTIVE", "REVOKED"]),
+    invites: z.record(z.string(), InviteSchema),
+    participants: z.record(z.string(), ParticipantSchema),
+    layout: CameraLayoutSchema,
+  })
+  .strict();
+
+export type SessionState = z.infer<typeof SessionStateSchema>;
 
 export interface CreateSessionInput {
   sessionId: string;
@@ -62,7 +66,7 @@ export function createSession(input: CreateSessionInput): SessionState {
     ]),
   );
 
-  return {
+  return SessionStateSchema.parse({
     sessionId: input.sessionId,
     revision: 0,
     status: "ACTIVE",
@@ -71,7 +75,7 @@ export function createSession(input: CreateSessionInput): SessionState {
     invites,
     participants,
     layout: CameraLayoutSchema.parse(input.layout ?? createDefaultLayout()),
-  };
+  });
 }
 
 export function restoreSession(state: SessionState): SessionState {
