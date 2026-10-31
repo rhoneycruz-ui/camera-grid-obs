@@ -22,4 +22,4 @@
 
 ## Repository Boundaries
 1. **[2026-10-31] Camera Grid OBS is independent from Projeto Ville**
-   Do instead: make all implementation commits inside `artifacts/camera-grid-obs-work` and never alter Ville's Production Core.
+   Do instead: work only inside `C:\Users\Rhoney\Desktop\Projeto\camera-grid-obs` and never place independent projects under Projeto Ville.
