@@ -32,7 +32,7 @@ export function registerLocalRoutes(
 ): void {
   app.post<{ Params: { inviteId: string } }>("/api/invites/:inviteId/revoke", async (request, reply) => {
     if (!authorized(request, "panel", auth)) return reply.code(403).send({ code: "FORBIDDEN" });
-    const result = service.apply({
+    const result = await service.apply({
       type: "REVOKE_INVITE",
       expectedRevision: service.snapshot().revision,
       inviteId: request.params.inviteId,
@@ -49,7 +49,7 @@ export function registerLocalRoutes(
     if (request.params.sessionId !== service.snapshot().sessionId) {
       return reply.code(404).send({ code: "NOT_FOUND" });
     }
-    const result = service.apply({
+    const result = await service.apply({
       type: "END_SESSION",
       expectedRevision: service.snapshot().revision,
     });
@@ -62,6 +62,9 @@ export function registerLocalRoutes(
 
   app.get<{ Params: { sessionId: string } }>("/output/:sessionId", async (request, reply) => {
     if (!authorized(request, "output", auth)) return reply.code(403).send({ code: "FORBIDDEN" });
+    if (service.snapshot().outputAccess === "REVOKED") {
+      return reply.code(403).send({ code: "OUTPUT_ACCESS_REVOKED" });
+    }
     if (request.params.sessionId !== service.snapshot().sessionId) {
       return reply.code(404).send({ code: "NOT_FOUND" });
     }

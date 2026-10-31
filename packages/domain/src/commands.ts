@@ -5,6 +5,15 @@ import { updateCameraLayout } from "./layout.js";
 import type { Participant, SessionState } from "./session.js";
 
 const baseCommand = { expectedRevision: z.number().int().nonnegative() };
+const GeometryPatchSchema = z
+  .object({
+    x: z.number().int().min(0).optional(),
+    y: z.number().int().min(0).optional(),
+    width: z.number().int().positive().optional(),
+    height: z.number().int().positive().optional(),
+  })
+  .strict()
+  .refine((geometry) => Object.keys(geometry).length > 0, "Geometry patch cannot be empty");
 
 export const SessionCommandSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("SET_DIRECTOR_ONLINE"), ...baseCommand, online: z.boolean() }).strict(),
@@ -35,12 +44,23 @@ export const SessionCommandSchema = z.discriminatedUnion("type", [
       visible: z.boolean(),
     })
     .strict(),
+  z
+    .object({
+      type: z.literal("UPDATE_CAMERA_GEOMETRY"),
+      ...baseCommand,
+      participantId: z.string(),
+      geometry: GeometryPatchSchema,
+    })
+    .strict(),
   z.object({ type: z.literal("REVOKE_OUTPUT_ACCESS"), ...baseCommand }).strict(),
   z.object({ type: z.literal("END_SESSION"), ...baseCommand }).strict(),
 ]);
 
 export type SessionCommand = z.infer<typeof SessionCommandSchema>;
-export type LayoutCommand = Extract<SessionCommand, { type: "SET_VISIBILITY" }>;
+export type LayoutCommand = Extract<
+  SessionCommand,
+  { type: "SET_VISIBILITY" | "UPDATE_CAMERA_GEOMETRY" }
+>;
 export type DomainErrorCode =
   | "STALE_STATE"
   | "SESSION_ENDED"
@@ -193,6 +213,19 @@ export function reduceSession(state: SessionState, rawCommand: SessionCommand): 
           [participant.id]: { ...participant, visible: command.visible },
         },
         layout: updateCameraLayout(state.layout, participant.slot, { visible: command.visible }),
+      });
+    }
+    case "UPDATE_CAMERA_GEOMETRY": {
+      const participant = state.participants[command.participantId];
+      if (participant === undefined) return fail(state, "UNKNOWN_PARTICIPANT");
+      const geometry = {
+        ...(command.geometry.x === undefined ? {} : { x: command.geometry.x }),
+        ...(command.geometry.y === undefined ? {} : { y: command.geometry.y }),
+        ...(command.geometry.width === undefined ? {} : { width: command.geometry.width }),
+        ...(command.geometry.height === undefined ? {} : { height: command.geometry.height }),
+      };
+      return success(state, {
+        layout: updateCameraLayout(state.layout, participant.slot, geometry),
       });
     }
     case "REVOKE_OUTPUT_ACCESS":

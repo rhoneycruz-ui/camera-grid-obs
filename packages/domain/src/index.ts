@@ -1,11 +1,13 @@
 export {
   InviteSchema,
+  type Invite,
+} from "./invite.js";
+export {
   issueInvite,
   rotateInvite,
-  type Invite,
   type IssuedInvite,
   type IssueInviteInput,
-} from "./invite.js";
+} from "./invite-node.js";
 export {
   CANVAS_HEIGHT,
   CANVAS_WIDTH,

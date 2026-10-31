@@ -46,4 +46,26 @@ describe("LayoutStore", () => {
 
     expect(recovered?.revision).toBe(1);
   });
+
+  it("fails closed when persisted state exists but no valid snapshot can be recovered", async () => {
+    const directory = await tempDirectory();
+    const store = new LayoutStore(directory);
+    await writeFile(join(directory, "session.json"), '{"truncated":', "utf8");
+
+    await expect(store.load()).rejects.toThrow("STATE_RECOVERY_FAILED");
+
+    await writeFile(join(directory, "session.backup.json"), '{"also":"invalid"}', "utf8");
+    await expect(store.load()).rejects.toThrow("STATE_RECOVERY_FAILED");
+  });
+
+  it("ignores a stale legacy temporary file when saving a new atomic snapshot", async () => {
+    const directory = await tempDirectory();
+    const store = new LayoutStore(directory);
+    await writeFile(join(directory, "session.tmp.json"), "crash residue", "utf8");
+
+    await expect(store.save(session())).resolves.toBe("written");
+    await expect(readFile(join(directory, "session.json"), "utf8")).resolves.toContain(
+      '"sessionId":"session-1"',
+    );
+  });
 });

@@ -9,6 +9,7 @@ import type { SessionService } from "./session-service.js";
 interface ClientContext {
   authenticated: boolean;
   canMutate: boolean;
+  role?: "panel" | "output";
 }
 
 function send(socket: WebSocket, message: ServerMessage): void {
@@ -26,7 +27,7 @@ export function registerWebSocketGateway(
     clients.set(socket, { authenticated: false, canMutate: false });
 
     socket.on("close", () => clients.delete(socket));
-    socket.on("message", (raw) => {
+    socket.on("message", async (raw) => {
       let parsed: ReturnType<typeof ClientMessageSchema.safeParse>;
       try {
         parsed = ClientMessageSchema.safeParse(JSON.parse(raw.toString()));
@@ -59,8 +60,13 @@ export function registerWebSocketGateway(
           socket.close(1008, "FORBIDDEN");
           return;
         }
+        if (message.role === "output" && service.snapshot().outputAccess === "REVOKED") {
+          socket.close(1008, "OUTPUT_ACCESS_REVOKED");
+          return;
+        }
         context.authenticated = true;
         context.canMutate = result.canMutate;
+        context.role = message.role;
         send(socket, { version: 1, type: "snapshot", state: createSnapshot(service.snapshot()) });
         return;
       }
@@ -78,7 +84,7 @@ export function registerWebSocketGateway(
         return;
       }
 
-      const result = service.apply(message.command);
+      const result = await service.apply(message.command);
       send(socket, {
         version: 1,
         type: "commandResult",
@@ -94,7 +100,12 @@ export function registerWebSocketGateway(
           state: createSnapshot(result.state),
         };
         for (const [client, clientContext] of clients) {
-          if (clientContext.authenticated && client !== socket) send(client, snapshot);
+          if (!clientContext.authenticated) continue;
+          if (result.state.outputAccess === "REVOKED" && clientContext.role === "output") {
+            client.close(1008, "OUTPUT_ACCESS_REVOKED");
+          } else {
+            send(client, snapshot);
+          }
         }
       }
     });

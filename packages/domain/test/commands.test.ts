@@ -25,6 +25,28 @@ describe("session command concurrency", () => {
     expect(result.state).toBe(before);
   });
 
+  it("updates camera geometry for a participant without changing its identity", () => {
+    const before = state();
+    const result = reduceSession(before, {
+      type: "UPDATE_CAMERA_GEOMETRY",
+      expectedRevision: 0,
+      participantId: "participant-1",
+      geometry: { x: 320, y: 180, width: 640 },
+    });
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.state.participants["participant-1"]).toBe(before.participants["participant-1"]);
+    expect(result.state.layout.cameras[0]).toMatchObject({
+      slot: 0,
+      x: 320,
+      y: 180,
+      width: 640,
+      height: 360,
+    });
+    expect(result.state.revision).toBe(1);
+  });
+
   it("ends the session without deleting the last layout", () => {
     const before = state();
     const result = reduceSession(before, {

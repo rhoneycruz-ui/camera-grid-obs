@@ -1,5 +1,5 @@
 import { createSession, issueInvite } from "@camera-grid/domain";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { createServer } from "../src/app.js";
 
@@ -74,5 +74,61 @@ describe("local HTTP access", () => {
       },
     });
     expect(externalRead.statusCode).toBe(403);
+  });
+
+  it("persists a successful revocation before acknowledging it", async () => {
+    const { invite } = issueInvite({ participantId: "participant-1", streamId: "stream-1", slot: 0 });
+    const save = vi.fn(async () => "written" as const);
+    const server = await createServer({
+      state: createSession({ sessionId: "session-1", invites: [invite] }),
+      persist: save,
+      auth: {
+        panelCapability: "panel-secret-test-only",
+        outputCapability: "output-secret-test-only",
+        allowedOrigins: ["http://127.0.0.1:4173"],
+      },
+    });
+    applications.push(server);
+
+    const response = await server.inject({
+      method: "POST",
+      url: "/api/invites/participant-1%3A1/revoke",
+      headers: {
+        origin: "http://127.0.0.1:4173",
+        authorization: "Bearer panel-secret-test-only",
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(save).toHaveBeenCalledOnce();
+    expect(save.mock.calls[0]?.[0].invites["participant-1:1"]?.status).toBe("REVOKED");
+  });
+
+  it("denies output reads after viewing access is revoked", async () => {
+    const { invite } = issueInvite({ participantId: "participant-1", streamId: "stream-1", slot: 0 });
+    const server = await createServer({
+      state: {
+        ...createSession({ sessionId: "session-1", invites: [invite] }),
+        outputAccess: "REVOKED",
+      },
+      auth: {
+        panelCapability: "panel-secret-test-only",
+        outputCapability: "output-secret-test-only",
+        allowedOrigins: ["http://127.0.0.1:4173"],
+      },
+    });
+    applications.push(server);
+
+    const response = await server.inject({
+      method: "GET",
+      url: "/output/session-1",
+      headers: {
+        origin: "http://127.0.0.1:4173",
+        authorization: "Bearer output-secret-test-only",
+      },
+    });
+
+    expect(response.statusCode).toBe(403);
+    expect(response.json()).toEqual({ code: "OUTPUT_ACCESS_REVOKED" });
   });
 });

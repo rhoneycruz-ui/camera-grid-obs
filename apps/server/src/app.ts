@@ -11,11 +11,12 @@ import { registerWebSocketGateway } from "./ws-gateway.js";
 export interface ServerConfig {
   state: SessionState;
   auth: AuthConfig;
+  persist?: (state: SessionState) => Promise<unknown>;
 }
 
 export async function createServer(config: ServerConfig): Promise<FastifyInstance> {
   const app = Fastify({ logger: false, bodyLimit: 64 * 1024 });
-  const service = new SessionService(config.state);
+  const service = new SessionService(config.state, config.persist);
 
   await app.register(websocket, { options: { maxPayload: 64 * 1024 } });
   registerWebSocketGateway(app, service, config.auth);
