@@ -28,7 +28,7 @@
 
 ## Review Focus
 
-- Convite revogado tenta entrar novamente em navegador novo: negar acesso de produção, não apenas ocultar a câmera — Task 2 e Gate A.
+- Convite revogado tenta entrar novamente em navegador novo: negar aprovação local de publicação, não apenas ocultar a câmera; acesso VDO direto permanece limitação explícita — Task 2 e Gate A.
 - Usuário nega câmera ou a câmera está ocupada: explicar o erro sem solicitar microfone — Task 5.
 - WebSocket cai durante um arraste e retorna com revisão antiga: recuperar snapshot e rejeitar mutação obsoleta — Task 3 e Task 4.
 - Participante reconecta com o mesmo convite enquanto outro stream ocupa o ID: preservar slot e mostrar conflito recuperável — Task 9.
@@ -108,7 +108,7 @@ Provar documentalmente se VDO.Ninja oferece revogação individual persistente. 
 
 Apresentar ao usuário uma das interpretações/alterações:
 
-1. **Lobby/transfer VDO.Ninja:** convite revogado ainda pode chegar ao lobby, mas nunca entra/reentra na sala privada de produção; ou
+1. **Lobby/transfer VDO.Ninja:** convite revogado ainda pode chegar ao lobby; a aplicação nunca o aprova novamente, sem prometer bloqueio de acesso VDO direto com dados de destino retidos; ou
 2. **Broker público mínimo:** endpoint HTTPS não-vídeo valida tokens revogáveis antes de entregar uma autorização de entrada, reconhecendo que impedir reutilização de uma URL VDO já revelada ainda exige lobby/rotação.
 
 Não seguir para Task 2 até o usuário escolher e o ADR registrar a semântica exata de “impedir conexão”.
@@ -136,7 +136,7 @@ git commit -m "chore: establish VDO contract and access gate"
 
 - [ ] **Step 1: Escrever testes de identidade e revogação**
 
-Cobrir: token individual não depende de nome; mesma identidade preserva slot; `REVOKED` bloqueia nova entrada e reconexão; `HIDDEN` mantém convite válido e apenas remove renderização; regenerar convite invalida a geração anterior; `END_SESSION` revoga convites ativos e bloqueia novos comandos sem apagar o último layout.
+Cobrir: token individual não depende de nome; mesma identidade preserva slot; toda publicação/reconexão exige aprovação explícita; `REVOKED` bloqueia novas aprovações locais; `HIDDEN` mantém convite válido e apenas remove renderização; bloqueio de visualização é independente; queda de diretor/servidor fecha aprovações por padrão; regenerar convite invalida a geração anterior; `END_SESSION` revoga convites ativos e bloqueia novos comandos sem apagar o último layout.
 
 - [ ] **Step 2: Escrever testes de layout canônico**
 
@@ -331,7 +331,7 @@ Seguir `docs/manual-tests/technical-spike-windows.md` e registrar: navegador/OBS
 
 - [ ] **Step 6: Executar teste manual de revogação conforme Gate A**
 
-Revogar convite, fechar câmera e tentar nova conexão e reconexão em janela anônima. Registrar se foi bloqueada antes da produção. Repetir com câmera apenas `hidden` e provar que ela ainda pode conectar, mas não renderiza.
+Revogar convite com participante conectado, fechar câmera e tentar reconexão em janela anônima. Tentar também com informações de destino obtidas antes da revogação. Registrar separadamente: decisão local de publicação, acesso VDO direto, autorização de visualização e renderização no layout. Repetir após queda/reinício do diretor e servidor local, e provar que convidado autorizado preserva slot mas exige nova aprovação.
 
 - [ ] **Step 7: Executar Gate B**
 
@@ -579,7 +579,7 @@ O dono deverá executar ou acompanhar estes testes; nenhum deles pode ser substi
 2. vídeo real recebido na Fonte de navegador do OBS;
 3. fundo transparente sobre captura real de jogo;
 4. movimento e resize chegando à saída sem reload da conexão;
-5. revogação impedindo entrada/reentrada de produção e ocultação mantendo acesso;
+5. revogação impedindo aprovação local, ocultação mantendo autorização e tentativa direta ao VDO registrada sem promessa de bloqueio;
 6. duas webcams simultâneas antes da expansão;
 7. queda/reconexão de rede e identidade estável;
 8. teste progressivo até nove câmeras, marcando como pendente tudo que não for realmente executado;

@@ -6,8 +6,8 @@ somente vídeo; a voz permanece no Discord.
 
 ## Estado
 
-**Gate A — decisão de acesso/revogação.** O painel completo não será construído
-até a fronteira de segurança dos convites ser aceita. Vídeo real, transparência
+**Gate A aceito com limitações documentadas; prova técnica em andamento.** O
+painel completo não será construído antes dos testes reais. Vídeo real, transparência
 no OBS e ausência de áudio só serão aprovados após testes manuais no Windows.
 
 ## Modelo de segurança
@@ -17,6 +17,7 @@ no OBS e ausência de áudio só serão aprovados após testes manuais no Window
 - nomes de salas, senhas, tokens, dados de clientes, mídia e logs não entram no Git;
 - os futuros serviços de estado e controle escutam apenas em `127.0.0.1`;
 - ocultar uma câmera nunca equivale a revogar o convite;
+- revogar bloqueia aprovação local, mas não promete banimento direto no VDO.Ninja;
 - testes simulados não comprovam vídeo real nem funcionamento no OBS.
 
 Consulte o [contrato VDO.Ninja](docs/vdo-ninja-contract.md), a

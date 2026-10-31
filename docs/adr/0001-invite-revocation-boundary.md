@@ -1,6 +1,6 @@
 # ADR 0001: Invite revocation boundary
 
-- Status: Proposed — blocked on Gate A
+- Status: Accepted with documented limitations
 - Date: 2026-10-30
 - Security priority: high
 
@@ -12,8 +12,10 @@ product must distinguish access control from layout presentation.
 - **Hidden:** the participant remains authorized and may remain connected; only
   their camera is not rendered in the active layout. Restoring visibility is a
   layout action.
-- **Revoked:** the participant is no longer authorized to enter or re-enter the
-  production room. Removing the visible camera alone is not revocation.
+- **Revoked:** the local control rejects that invite generation, removes its
+  camera from the production layout, requests disconnection of its publication,
+  and forbids new local approvals. Removing the visible camera alone is not
+  revocation.
 
 VDO.Ninja does not document durable, individual revocation of a direct invite
 URL after that URL has been revealed.
@@ -25,16 +27,31 @@ transfers an approved connection into a secret production room. A transferred
 guest does not learn the production destination. Refreshing or reconnecting
 returns the guest to the lobby.
 
-Revocation means:
+Revocation means, within the application boundary:
 
 1. remove/transfer any current production connection;
 2. mark the local invite generation `REVOKED`;
-3. never transfer that generation into production again;
-4. a fresh browser or reconnect may reach the lobby, but never production.
+3. reject every later approval request for that invite generation;
+4. require an explicit director approval for every production admission or
+   reconnection, including after a local server restart;
+5. allow the lobby to remain reachable.
 
-Benefits: no mandatory paid service, no public application backend, and the
-production room remains undisclosed. Cost: the revoked link still establishes a
-VDO.Ninja lobby connection and admission requires director action.
+Benefits: no mandatory paid service or public application backend. Cost: the
+revoked link still establishes a VDO.Ninja lobby connection and admission
+requires director action.
+
+This is not a VDO.Ninja ban. Transfer secrecy alone is not an access-control
+guarantee: a client may inspect or retain destination information, credentials
+may already be known, and the application cannot intercept a direct VDO.Ninja
+connection. A person with valid production destination information may bypass
+the local approval UI. The spike must test and report this as a limitation, not
+promise that revocation makes direct access impossible.
+
+The director is also an availability and authority boundary. VDO.Ninja states
+that the first director claims the room only while connected. If the director
+disconnects, another director may claim it. Local automatic approval therefore
+defaults to disabled whenever director presence is unknown or offline. This
+reduces accidental approval but does not enforce VDO.Ninja's remote room policy.
 
 ## Option B — minimal public token broker
 
@@ -48,12 +65,16 @@ protection, and more maintenance. If a reusable direct production URL was ever
 returned to the browser, revoking the broker token alone cannot make that URL
 unknown again; lobby/transfer or room rotation is still required.
 
-## Proposed decision
+## Decision
 
-Use Option A for the technical spike because it protects the production room
-with the smallest public attack surface and lowest operating cost. This decision
-is not accepted until the owner confirms that “revoked users may reach the lobby
-but can never enter/re-enter production” satisfies the requirement.
+Use Option A for the technical spike because it has the smallest public attack
+surface and lowest operating cost. Do not add a public broker in this version.
 
-No invite domain, server, or full panel implementation may proceed before Gate A
-is accepted and this ADR changes to `Accepted`.
+The accepted guarantee is limited to local control: a revoked invite cannot be
+approved by the application, its camera is removed from the layout, and a
+disconnect request is issued. Direct VDO.Ninja publication or viewing with
+previously obtained destination data is outside this guarantee until real tests
+prove an enforceable remote mechanism.
+
+Publication approval, output viewing authorization, and layout visibility are
+three independent controls. None may be reported as proof of another.

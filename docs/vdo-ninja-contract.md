@@ -80,13 +80,24 @@ lobby/transfer, and external access-control links. It does **not** document a
 durable per-invite revocation list that makes an already revealed direct VDO URL
 individually unusable.
 
-The documented lobby/transfer behavior is stronger: a transferred guest does
-not learn the private production room and returns to the landing room after a
-refresh or reconnect. This can enforce “cannot enter or re-enter production,”
-but it cannot prevent the revoked landing link from connecting to the lobby.
+The documentation describes a transferred guest as returning to the landing
+room after refresh or reconnect. Camera Grid OBS treats that as expected product
+behavior to test, not as a ban guarantee. Transfer does not prove that a client
+cannot retain or inspect destination information, and local revocation cannot
+intercept a direct connection to VDO.Ninja made with previously obtained room
+data. The lobby may remain accessible.
+
+`queue` is not a standalone production-room security boundary: the official
+documentation warns that a guest can remove the parameter when it is used only
+on the guest link. The first director also owns the room only while connected;
+after disconnect another director can claim it. The spike must test director
+loss and require explicit local production approval after recovery, while
+reporting that this does not remotely enforce the VDO room.
 
 Sources:
 
 - <https://docs.vdo.ninja/guides/how-to-selectively-allow-access>
 - <https://docs.vdo.ninja/guides/transfer-rooms>
 - <https://docs.vdo.ninja/getting-started/rooms>
+- <https://docs.vdo.ninja/advanced-settings/guest-queuing-parameters/queue>
+- <https://docs.vdo.ninja/common-errors-and-known-issues/already-in-use-or-claimed-errors>

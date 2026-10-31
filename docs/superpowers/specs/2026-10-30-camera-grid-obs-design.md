@@ -165,7 +165,10 @@ O servidor local cria:
 O dono gera até nove links individuais, um por amigo/slot. O link público de convite contém
 somente a capacidade limitada necessária à entrada e pode ser reutilizado em outro navegador ou
 dispositivo sem perder a posição. Um convite perdido pode ser revogado e regenerado sem alterar o
-slot; o token anterior deixa de ser aceito pela aplicação. O link OBS
+slot; o token anterior deixa de ser aceito pela aplicação. Toda entrada ou reconexão na produção
+exige aprovação local explícita com diretor online. Isso não constitui banimento no VDO.Ninja:
+quem já possui dados válidos do destino pode tentar acesso direto fora do controle da aplicação.
+O link OBS
 não contém senha de diretor nem capacidade administrativa. Mutações de layout exigem conexão
 loopback e capacidade administrativa. A saída apenas assina o estado e não envia comandos.
 
@@ -182,6 +185,11 @@ A senha opcional de entrada protege a sala pelo mecanismo oficialmente suportado
 armazenada somente no computador do dono. A saída OBS recebe apenas capacidade local de leitura.
 A página estática não implementa uma falsa validação de senha no cliente nem trata ocultação de UI
 como autorização.
+
+Há três controles independentes: autorização para publicar, capacidade para visualizar a saída e
+visibilidade da caixa no layout. Revogar convite bloqueia aprovação local de publicação e solicita
+desconexão, mas não revoga automaticamente uma capacidade de visualização; ocultar só altera o
+layout. Se o diretor ou servidor local estiver offline, novas aprovações ficam fechadas por padrão.
 
 ## Estado e persistência
 

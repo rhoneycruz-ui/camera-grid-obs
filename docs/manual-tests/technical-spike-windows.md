@@ -64,18 +64,42 @@ Run only after the local panel/output server exists.
 
 ## E. Gate A revocation — lobby/transfer option
 
-1. Join with one disposable invite in Browser A and transfer it from the lobby
-   into the secret production room.
-2. Use **Hide**: the camera must disappear from the layout while the participant
-   remains authorized; showing it again must not require a new invite.
-3. Use **Revoke**: remove the current production connection and mark the invite
-   generation revoked.
-4. Refresh Browser A. It may return to the lobby but must not return to
-   production without explicit approval—and the revoked generation must never
-   receive that approval.
-5. Paste the same invite into a clean Browser B. It may reach the lobby but must
-   not enter production.
-6. Restart Browser A and repeat. Any automatic production reconnection is FAIL.
+Run each check while recording what the **local application** decided separately
+from what VDO.Ninja actually allowed. Do not infer one from the other.
+
+1. Join with one disposable invite in Browser A. Approve it explicitly before
+   transferring/admitting it to production.
+2. Use **Hide**: only the layout box disappears. Publication authorization and
+   any separate output-view capability remain unchanged.
+3. With Browser A connected, use **Revoke**. Confirm the local invite becomes
+   revoked, the box leaves production, and a disconnect request is issued.
+   Record separately whether VDO.Ninja actually disconnects the peer.
+4. Refresh Browser A and request admission again. The lobby may open, but the
+   local application must reject approval for the revoked generation.
+5. Paste the same invite into clean Browser B. Repeat the local decision check.
+6. Before revocation, use developer tools only on disposable test data to record
+   whether the client can observe destination room/password information. After
+   revocation, try those previously obtained destination details directly.
+   Record the result as a limitation; a successful direct connection must not be
+   reworded as an application approval.
+7. Disconnect the director. Confirm local approval becomes unavailable. Observe
+   whether the guest remains connected and whether another director can claim
+   the VDO room. Reconnect the intended director and require explicit approval.
+8. Stop and restart the local server. A pending or previously connected browser
+   must not become automatically approved. Revoked state must remain revoked.
+9. With a different active invite, disconnect and reconnect the guest. The same
+   participant and slot must be preserved, but production admission requires a
+   fresh explicit approval.
+
+## F. Publication, viewing, and layout controls
+
+1. Block/revoke **publication**: the invite can no longer receive local
+   publication approval; output viewing capability is unchanged.
+2. Block **viewing**: the output capability can no longer open the protected
+   local output; guest publication state is unchanged.
+3. **Hide** the camera: only layout visibility changes; neither publication nor
+   viewing authorization changes.
+4. Any test where one action silently changes another access layer is FAIL.
 
 ## Evidence template
 
@@ -90,7 +114,14 @@ Microphone permission absent: PASS / FAIL
 OBS audio absent: PASS / FAIL
 OBS transparency: PASS / FAIL / NOT RUN
 WebSocket live update: PASS / FAIL / NOT RUN
-Hide preserves authorization: PASS / FAIL / NOT RUN
-Revoke blocks production re-entry: PASS / FAIL / NOT RUN
+Hide changes layout only: PASS / FAIL / NOT RUN
+Revoked invite denied local approval: PASS / FAIL / NOT RUN
+Connected participant removed on revoke: PASS / FAIL / NOT RUN
+Direct VDO destination attempt result: BLOCKED / ALLOWED / NOT RUN
+Director disconnect fail-closed locally: PASS / FAIL / NOT RUN
+Server restart preserves revocation: PASS / FAIL / NOT RUN
+Authorized reconnect preserves slot: PASS / FAIL / NOT RUN
+Authorized reconnect requires approval: PASS / FAIL / NOT RUN
+Viewing block independent of publication: PASS / FAIL / NOT RUN
 Notes (no URLs, tokens, passwords, or client data):
 ```
